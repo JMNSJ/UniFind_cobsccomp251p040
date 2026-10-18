@@ -2,15 +2,17 @@
 import SwiftUI
 import PhotosUI
 import UIKit
+import Combine
 
 struct ReportItemView: View {
+    @ObservedObject private var reportStore = ReportStore.shared
+
     @State private var itemName = ""
     @State private var category = "Electronics"
-    @State private var description = ""
+    @State private var itemDescription = ""
     @State private var location = ""
     @State private var reportType = "Lost"
 
-    // Photo selection states
     @State private var selectedPhoto: PhotosPickerItem? = nil
     @State private var selectedImage: UIImage? = nil
 
@@ -52,7 +54,7 @@ struct ReportItemView: View {
 
                     TextField(
                         "Description",
-                        text: $description,
+                        text: $itemDescription,
                         axis: .vertical
                     )
                     .lineLimit(3...6)
@@ -99,11 +101,9 @@ struct ReportItemView: View {
                             )
                         }
 
-                        Text(
-                            "Add a clear photograph to help identify the item."
-                        )
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                        Text("Add a clear photograph of the item.")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
                     }
                 }
 
@@ -115,9 +115,7 @@ struct ReportItemView: View {
                 }
 
                 Section {
-                    Button {
-                        showingConfirmation = true
-                    } label: {
+                    Button(action: submitReport) {
                         Text("Submit Report")
                             .font(.headline)
                             .frame(maxWidth: .infinity)
@@ -143,11 +141,25 @@ struct ReportItemView: View {
                     resetForm()
                 }
             } message: {
-                Text(
-                    "Your \(reportType.lowercased()) item report has been recorded for this demo."
-                )
+                Text("Your \(reportType.lowercased()) item report has been added to My Reports.")
             }
         }
+    }
+
+    private func submitReport() {
+        let report = LostFoundItem(
+            itemName: itemName.trimmingCharacters(
+                in: .whitespacesAndNewlines
+            ),
+            category: category,
+            description: itemDescription,
+            location: location,
+            reportType: reportType,
+            image: selectedImage
+        )
+
+        reportStore.addReport(report)
+        showingConfirmation = true
     }
 
     @MainActor
@@ -172,7 +184,7 @@ struct ReportItemView: View {
     private func resetForm() {
         itemName = ""
         category = "Electronics"
-        description = ""
+        itemDescription = ""
         location = ""
         reportType = "Lost"
         selectedPhoto = nil
