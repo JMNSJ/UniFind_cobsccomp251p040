@@ -2,7 +2,6 @@
 import SwiftUI
 import PhotosUI
 import UIKit
-import Combine
 
 struct ReportItemView: View {
     @ObservedObject private var reportStore = ReportStore.shared
@@ -13,10 +12,16 @@ struct ReportItemView: View {
     @State private var location = ""
     @State private var reportType = "Lost"
 
-    @State private var selectedPhoto: PhotosPickerItem? = nil
-    @State private var selectedImage: UIImage? = nil
+    @State private var latitude: Double?
+    @State private var longitude: Double?
 
-    @State private var showingConfirmation = false
+    @State private var selectedPhoto: PhotosPickerItem?
+    @State private var selectedImage: UIImage?
+
+    @State private var isSubmitting = false
+    @State private var showingSuccess = false
+    @State private var showingError = false
+    @State private var submissionError = ""
 
     private let categories = [
         "Electronics",
@@ -29,26 +34,23 @@ struct ReportItemView: View {
         "Other"
     ]
 
-    private let reportTypes = ["Lost", "Found"]
-
     var body: some View {
         NavigationStack {
             Form {
                 Section("Report Type") {
-                    Picker("Type", selection: $reportType) {
-                        ForEach(reportTypes, id: \.self) { type in
-                            Text(type).tag(type)
-                        }
+                    Picker("Item Status", selection: $reportType) {
+                        Text("Lost").tag("Lost")
+                        Text("Found").tag("Found")
                     }
                     .pickerStyle(.segmented)
                 }
 
                 Section("Item Details") {
-                    TextField("Item Name", text: $itemName)
+                    TextField("Item name", text: $itemName)
 
                     Picker("Category", selection: $category) {
-                        ForEach(categories, id: \.self) { itemCategory in
-                            Text(itemCategory).tag(itemCategory)
+                        ForEach(categories, id: \.self) { item in
+                            Text(item).tag(item)
                         }
                     }
 
@@ -60,70 +62,92 @@ struct ReportItemView: View {
                     .lineLimit(3...6)
                 }
 
-                Section("Item Photograph") {
+                Section("Pin the Item Location") {
+                    MapLocationPickerView(
+                        latitude: $latitude,
+                        longitude: $longitude,
+                        locationText: $location
+                    )
+
+                    TextField(
+                        "Place name or additional details",
+                        text: $location,
+                        axis: .vertical
+                    )
+                    .textInputAutocapitalization(.words)
+
+                    if latitude != nil && longitude != nil {
+                        Label(
+                            "Map pin selected",
+                            systemImage: "checkmark.circle.fill"
+                        )
+                        .font(.caption)
+                        .foregroundStyle(.green)
+                    } else {
+                        Text(
+                            "Tap the map to drop a pin. A pin is required to submit this report."
+                        )
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    }
+                }
+
+                Section("Item Photo") {
+                    PhotosPicker(
+                        selection: $selectedPhoto,
+                        matching: .images
+                    ) {
+                        Label(
+                            selectedImage == nil
+                                ? "Choose Photo"
+                                : "Change Photo",
+                            systemImage: "photo"
+                        )
+                    }
+
                     if let image = selectedImage {
                         Image(uiImage: image)
                             .resizable()
                             .scaledToFit()
-                            .frame(maxWidth: .infinity)
                             .frame(maxHeight: 220)
                             .clipShape(
                                 RoundedRectangle(cornerRadius: 12)
                             )
 
-                        PhotosPicker(
-                            selection: $selectedPhoto,
-                            matching: .images
-                        ) {
-                            Label(
-                                "Change Photo",
-                                systemImage: "photo"
-                            )
-                        }
-
-                        Button(role: .destructive) {
+                        Button("Remove Photo", role: .destructive) {
                             selectedPhoto = nil
                             selectedImage = nil
-                        } label: {
-                            Label(
-                                "Remove Photo",
-                                systemImage: "trash"
-                            )
                         }
-                    } else {
-                        PhotosPicker(
-                            selection: $selectedPhoto,
-                            matching: .images
-                        ) {
-                            Label(
-                                "Choose a Photo",
-                                systemImage: "photo.badge.plus"
-                            )
-                        }
-
-                        Text("Add a clear photograph of the item.")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
                     }
-                }
-
-                Section("Location") {
-                    TextField(
-                        "Where was it lost or found?",
-                        text: $location
-                    )
                 }
 
                 Section {
-                    Button(action: submitReport) {
-                        Text("Submit Report")
-                            .font(.headline)
-                            .frame(maxWidth: .infinity)
+                    Button {
+                        submitReport()
+                    } label: {
+                        HStack {
+                            Spacer()
+
+                            if isSubmitting {
+                                ProgressView()
+                            } else {
+                                Text("Submit \(reportType) Report")
+                                    .fontWeight(.semibold)
+                            }
+
+                            Spacer()
+                        }
                     }
                     .disabled(
+                        isSubmitting ||
                         itemName.trimmingCharacters(
                             in: .whitespacesAndNewlines
-                        ).isEmpty
+                        ).isEmpty ||
+                        location.trimmingCharacters(
+                            in: .whitespacesAndNewlines
+                        ).isEmpty ||
+                        latitude == nil ||
+                        longitude == nil
                     )
                 }
             }
@@ -133,36 +157,21 @@ struct ReportItemView: View {
                     await loadPhoto(from: newPhoto)
                 }
             }
-            .alert(
-                "Report Submitted",
-                isPresented: $showingConfirmation
-            ) {
-                Button("OK") {
+            .alert("Report Submitted", isPresented: $showingSuccess) {
+                Button("OK", role: .cancel) {
                     resetForm()
                 }
             } message: {
-                Text("Your \(reportType.lowercased()) item report has been added to My Reports.")
+                Text("Your report was saved successfully.")
+            }
+            .alert("Unable to Submit", isPresented: $showingError) {
+                Button("OK", role: .cancel) {}
+            } message: {
+                Text(submissionError)
             }
         }
     }
 
-    private func submitReport() {
-        let report = LostFoundItem(
-            itemName: itemName.trimmingCharacters(
-                in: .whitespacesAndNewlines
-            ),
-            category: category,
-            description: itemDescription,
-            location: location,
-            reportType: reportType,
-            image: selectedImage
-        )
-
-        reportStore.addReport(report)
-        showingConfirmation = true
-    }
-
-    @MainActor
     private func loadPhoto(from photo: PhotosPickerItem?) async {
         guard let photo else {
             selectedImage = nil
@@ -170,14 +179,60 @@ struct ReportItemView: View {
         }
 
         do {
-            if let imageData = try await photo.loadTransferable(
-                type: Data.self
-            ),
-            let image = UIImage(data: imageData) {
+            if let data = try await photo.loadTransferable(type: Data.self),
+               let image = UIImage(data: data) {
                 selectedImage = image
             }
         } catch {
-            print("Failed to load selected photo: \(error)")
+            submissionError = "Unable to load the selected photo."
+            showingError = true
+        }
+    }
+
+    private func submitReport() {
+        let trimmedName = itemName.trimmingCharacters(
+            in: .whitespacesAndNewlines
+        )
+        let trimmedLocation = location.trimmingCharacters(
+            in: .whitespacesAndNewlines
+        )
+
+        guard !trimmedName.isEmpty,
+              !trimmedLocation.isEmpty,
+              let latitude,
+              let longitude else {
+            submissionError =
+                "Enter an item name, select a map pin, and provide a location description."
+            showingError = true
+            return
+        }
+
+        isSubmitting = true
+
+        let report = LostFoundItem(
+            itemName: trimmedName,
+            category: category,
+            description: itemDescription.trimmingCharacters(
+                in: .whitespacesAndNewlines
+            ),
+            location: trimmedLocation,
+            reportType: reportType,
+            image: selectedImage,
+            latitude: latitude,
+            longitude: longitude
+        )
+
+        reportStore.addReport(report) { result in
+            isSubmitting = false
+
+            switch result {
+            case .success:
+                showingSuccess = true
+
+            case .failure(let error):
+                submissionError = error.localizedDescription
+                showingError = true
+            }
         }
     }
 
@@ -187,8 +242,11 @@ struct ReportItemView: View {
         itemDescription = ""
         location = ""
         reportType = "Lost"
+        latitude = nil
+        longitude = nil
         selectedPhoto = nil
         selectedImage = nil
+        reportStore.clearError()
     }
 }
 

@@ -1,42 +1,38 @@
 
 import SwiftUI
+import Combine
 
 struct AppRootView: View {
-    @AppStorage("hasCompletedOnboarding")
-    private var hasCompletedOnboarding = false
 
-    @State private var isLoggedIn = false
-    @State private var showingRegistration = false
+    @StateObject private var authViewModel =
+        AuthenticationViewModel()
+
+    @State private var hasCompletedOnboarding = false
 
     var body: some View {
         Group {
-            if !hasCompletedOnboarding {
-                OnboardingView {
-                    hasCompletedOnboarding = true
-                }
-            } else if isLoggedIn {
+            if authViewModel.isLoggedIn {
+
+                // Existing signed-in user area.
                 UserTabView(
                     onLogout: {
-                        isLoggedIn = false
+                        authViewModel.logout()
                     }
                 )
-            } else if showingRegistration {
-                RegisterView(
-                    onRegistered: {
-                        showingRegistration = false
-                        isLoggedIn = true
-                    },
-                    onBackToLogin: {
-                        showingRegistration = false
-                    }
-                )
-            } else {
+
+            } else if hasCompletedOnboarding {
+
+                // Show login after onboarding.
                 LoginView(
-                    onLogin: {
-                        isLoggedIn = true
-                    },
-                    onRegister: {
-                        showingRegistration = true
+                    authViewModel: authViewModel
+                )
+
+            } else {
+
+                // Show onboarding when the app first opens.
+                OnboardingView(
+                    onGetStarted: {
+                        hasCompletedOnboarding = true
                     }
                 )
             }
