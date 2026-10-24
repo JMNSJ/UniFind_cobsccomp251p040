@@ -4,6 +4,7 @@ import PhotosUI
 import UIKit
 
 struct ReportItemView: View {
+
     @ObservedObject private var reportStore = ReportStore.shared
 
     @State private var itemName = ""
@@ -17,6 +18,8 @@ struct ReportItemView: View {
 
     @State private var selectedPhoto: PhotosPickerItem?
     @State private var selectedImage: UIImage?
+
+    @State private var showTextScanner = false
 
     @State private var isSubmitting = false
     @State private var showingSuccess = false
@@ -37,6 +40,9 @@ struct ReportItemView: View {
     var body: some View {
         NavigationStack {
             Form {
+
+                // MARK: - Report Type
+
                 Section("Report Type") {
                     Picker("Item Status", selection: $reportType) {
                         Text("Lost").tag("Lost")
@@ -44,6 +50,8 @@ struct ReportItemView: View {
                     }
                     .pickerStyle(.segmented)
                 }
+
+                // MARK: - Item Details
 
                 Section("Item Details") {
                     TextField("Item name", text: $itemName)
@@ -61,6 +69,8 @@ struct ReportItemView: View {
                     )
                     .lineLimit(3...6)
                 }
+
+                // MARK: - Map Location
 
                 Section("Pin the Item Location") {
                     MapLocationPickerView(
@@ -92,7 +102,10 @@ struct ReportItemView: View {
                     }
                 }
 
-                Section("Item Photo") {
+                // MARK: - Item Photo and Computer Vision
+
+                Section("Item Photo & Text Recognition") {
+
                     PhotosPicker(
                         selection: $selectedPhoto,
                         matching: .images
@@ -106,13 +119,30 @@ struct ReportItemView: View {
                     }
 
                     if let image = selectedImage {
+
                         Image(uiImage: image)
                             .resizable()
                             .scaledToFit()
                             .frame(maxHeight: 220)
+                            .frame(maxWidth: .infinity)
                             .clipShape(
                                 RoundedRectangle(cornerRadius: 12)
                             )
+
+                        Button {
+                            showTextScanner = true
+                        } label: {
+                            Label(
+                                "Identify Text in Photo",
+                                systemImage: "text.viewfinder"
+                            )
+                        }
+
+                        Text(
+                            "Scan the photo to detect visible text, such as ID numbers, names, and document details."
+                        )
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
 
                         Button("Remove Photo", role: .destructive) {
                             selectedPhoto = nil
@@ -120,6 +150,8 @@ struct ReportItemView: View {
                         }
                     }
                 }
+
+                // MARK: - Submit Report
 
                 Section {
                     Button {
@@ -152,25 +184,67 @@ struct ReportItemView: View {
                 }
             }
             .navigationTitle("Report an Item")
+
+            // MARK: - Load Selected Photo
+
             .onChange(of: selectedPhoto) { _, newPhoto in
                 Task {
                     await loadPhoto(from: newPhoto)
                 }
             }
-            .alert("Report Submitted", isPresented: $showingSuccess) {
+
+            // MARK: - Text Recognition Sheet
+
+            .sheet(isPresented: $showTextScanner) {
+                if let image = selectedImage {
+                    ImageTextScannerView(image: image) { recognizedText in
+
+                        let cleanedText = recognizedText.trimmingCharacters(
+                            in: .whitespacesAndNewlines
+                        )
+
+                        guard !cleanedText.isEmpty else {
+                            return
+                        }
+
+                        if itemDescription.trimmingCharacters(
+                            in: .whitespacesAndNewlines
+                        ).isEmpty {
+                            itemDescription = cleanedText
+                        } else {
+                            itemDescription += "\n" + cleanedText
+                        }
+                    }
+                }
+            }
+
+            // MARK: - Success Alert
+
+            .alert(
+                "Report Submitted",
+                isPresented: $showingSuccess
+            ) {
                 Button("OK", role: .cancel) {
                     resetForm()
                 }
             } message: {
                 Text("Your report was saved successfully.")
             }
-            .alert("Unable to Submit", isPresented: $showingError) {
+
+            // MARK: - Error Alert
+
+            .alert(
+                "Unable to Submit",
+                isPresented: $showingError
+            ) {
                 Button("OK", role: .cancel) {}
             } message: {
                 Text(submissionError)
             }
         }
     }
+
+    // MARK: - Load Photo
 
     private func loadPhoto(from photo: PhotosPickerItem?) async {
         guard let photo else {
@@ -182,6 +256,9 @@ struct ReportItemView: View {
             if let data = try await photo.loadTransferable(type: Data.self),
                let image = UIImage(data: data) {
                 selectedImage = image
+            } else {
+                submissionError = "Unable to load the selected photo."
+                showingError = true
             }
         } catch {
             submissionError = "Unable to load the selected photo."
@@ -189,10 +266,13 @@ struct ReportItemView: View {
         }
     }
 
+    // MARK: - Submit Report
+
     private func submitReport() {
         let trimmedName = itemName.trimmingCharacters(
             in: .whitespacesAndNewlines
         )
+
         let trimmedLocation = location.trimmingCharacters(
             in: .whitespacesAndNewlines
         )
@@ -236,16 +316,23 @@ struct ReportItemView: View {
         }
     }
 
+    // MARK: - Reset Form
+
     private func resetForm() {
         itemName = ""
         category = "Electronics"
         itemDescription = ""
         location = ""
         reportType = "Lost"
+
         latitude = nil
         longitude = nil
+
         selectedPhoto = nil
         selectedImage = nil
+
+        showTextScanner = false
+
         reportStore.clearError()
     }
 }
