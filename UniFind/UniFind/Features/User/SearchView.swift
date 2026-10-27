@@ -1,29 +1,32 @@
-
 import SwiftUI
+import FirebaseFirestore
 
 struct SearchView: View {
+
     @State private var searchText = ""
     @State private var selectedStatus = "All"
 
-    private let items: [(name: String, location: String, status: String)] = [
-        ("Black Wallet", "Library", "Lost"),
-        ("Student ID Card", "Cafeteria", "Found"),
-        ("Blue Water Bottle", "Lecture Hall", "Lost"),
-        ("Set of Keys", "Parking Area", "Found")
-    ]
+    @State private var items: [LostFoundItem] = []
+    @State private var isLoading = true
+    @State private var errorMessage: String?
+
+    @State private var listener: ListenerRegistration?
 
     private let statuses = ["All", "Lost", "Found"]
 
-    private var filteredItems: [(name: String, location: String, status: String)] {
+    private var filteredItems: [LostFoundItem] {
         items.filter { item in
+
             let matchesSearch =
-                searchText.isEmpty ||
-                item.name.localizedCaseInsensitiveContains(searchText) ||
-                item.location.localizedCaseInsensitiveContains(searchText)
+                searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ||
+                item.itemName.localizedCaseInsensitiveContains(searchText) ||
+                item.location.localizedCaseInsensitiveContains(searchText) ||
+                item.category.localizedCaseInsensitiveContains(searchText) ||
+                item.description.localizedCaseInsensitiveContains(searchText)
 
             let matchesStatus =
                 selectedStatus == "All" ||
-                item.status == selectedStatus
+                item.reportType.caseInsensitiveCompare(selectedStatus) == .orderedSame
 
             return matchesSearch && matchesStatus
         }
@@ -32,11 +35,15 @@ struct SearchView: View {
     var body: some View {
         NavigationStack {
             VStack(spacing: 16) {
-                TextField("Search by item or location", text: $searchText)
-                    .padding()
-                    .background(.gray.opacity(0.1))
-                    .clipShape(RoundedRectangle(cornerRadius: 12))
-                    .padding(.horizontal)
+
+                TextField(
+                    "Search by item, category or location",
+                    text: $searchText
+                )
+                .padding()
+                .background(.gray.opacity(0.1))
+                .clipShape(RoundedRectangle(cornerRadius: 12))
+                .padding(.horizontal)
 
                 Picker("Status", selection: $selectedStatus) {
                     ForEach(statuses, id: \.self) { status in
@@ -46,28 +53,132 @@ struct SearchView: View {
                 .pickerStyle(.segmented)
                 .padding(.horizontal)
 
-                List(filteredItems, id: \.name) { item in
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text(item.name)
-                            .font(.headline)
+                if isLoading {
+                    Spacer()
+                    ProgressView("Loading reports...")
+                    Spacer()
 
-                        Label(item.location, systemImage: "mappin.and.ellipse")
+                } else if let errorMessage = errorMessage {
+                    Spacer()
+
+                    ContentUnavailableView(
+                        "Unable to Load Reports",
+                        systemImage: "exclamationmark.icloud",
+                        description: Text(errorMessage)
+                    )
+
+                    Button("Retry") {
+                        startListening()
+                    }
+                    .buttonStyle(.borderedProminent)
+
+                    Spacer()
+
+                } else if filteredItems.isEmpty {
+                    Spacer()
+
+                    ContentUnavailableView(
+                        "No Reports Found",
+                        systemImage: "magnifyingglass",
+                        description: Text(
+                            searchText.isEmpty
+                                ? "No lost or found reports are available yet."
+                                : "Try another item name, category or location."
+                        )
+                    )
+
+                    Spacer()
+
+                } else {
+                    List(filteredItems) { item in
+                        VStack(alignment: .leading, spacing: 7) {
+
+                            Text(item.itemName)
+                                .font(.headline)
+
+                            Label(
+                                item.location,
+                                systemImage: "mappin.and.ellipse"
+                            )
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
 
-                        Text(item.status)
-                            .font(.caption.bold())
-                            .foregroundStyle(
-                                item.status == "Lost" ? .orange : .green
-                            )
+                            Text(item.category)
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+
+                            HStack {
+                                Text(item.reportType)
+                                    .font(.caption.bold())
+                                    .foregroundStyle(
+                                        item.reportType.caseInsensitiveCompare("Lost") == .orderedSame
+                                            ? .orange : .green
+                                    )
+
+                                Spacer()
+
+                                Text(item.dateReported, style: .date)
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+                        .padding(.vertical, 5)
                     }
-                    .padding(.vertical, 4)
+                    .listStyle(.plain)
                 }
-                .listStyle(.plain)
             }
             .padding(.top)
             .navigationTitle("Search Items")
+            .onAppear {
+                startListening()
+            }
+            .onDisappear {
+                listener?.remove()
+                listener = nil
+            }
         }
+    }
+
+    private func startListening() {
+        guard listener == nil else { return }
+
+        isLoading = true
+        errorMessage = nil
+
+        listener = Firestore.firestore()
+            .collection("reports")
+            .addSnapshotListener { snapshot, error in
+
+                if let error = error {
+                    print("Firestore Search Error: \(error.localizedDescription)")
+
+                    errorMessage = error.localizedDescription
+                    isLoading = false
+                    listener?.remove()
+                    listener = nil
+                    return
+                }
+
+                guard let documents = snapshot?.documents else {
+                    items = []
+                    isLoading = false
+                    return
+                }
+
+                items = documents.compactMap { document in
+                    guard let item = LostFoundItem(document: document) else {
+                        print(
+                            "Could not decode report document: \(document.documentID)"
+                        )
+                        return nil
+                    }
+
+                    return item
+                }
+
+                isLoading = false
+                errorMessage = nil
+            }
     }
 }
 
