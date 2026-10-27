@@ -1,7 +1,11 @@
-//
-//  AppDestination.swift
-//  UniFind
-//
-//  Created by cobsccomp251p-040 on 2026-10-18.
-//
 
+import Foundation
+
+enum AppDestination: Hashable {
+    case adminDashboard
+    case priorityRequests
+    case priorityRequestDetail(String)
+    case adminAlerts
+    case priorityAlertRequest
+    case priorityAlerts
+}

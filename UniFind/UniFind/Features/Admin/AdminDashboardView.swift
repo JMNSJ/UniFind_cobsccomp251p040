@@ -1,41 +1,56 @@
 
 import SwiftUI
 import FirebaseFirestore
-import FirebaseAuth
 
 struct AdminDashboardView: View {
-    @State private var reports: [[String: Any]] = []
-    @State private var isLoading = true
-    @State private var errorMessage: String?
-
-    private let db = Firestore.firestore()
-
-    private var pendingCount: Int {
-        reports.filter {
-            ($0["status"] as? String ?? "Pending") == "Pending"
-        }.count
-    }
-
-    private var lostCount: Int {
-        reports.filter {
-            ($0["reportType"] as? String ?? "") == "Lost"
-        }.count
-    }
-
-    private var foundCount: Int {
-        reports.filter {
-            ($0["reportType"] as? String ?? "") == "Found"
-        }.count
-    }
-
-    private var urgentCount: Int {
-        reports.filter {
-            ($0["urgentRequested"] as? Bool ?? false) &&
-            !($0["urgentApproved"] as? Bool ?? false)
-        }.count
-    }
+    @StateObject private var viewModel = AdminViewModel()
+    @State private var requestListener: ListenerRegistration?
+    @State private var checkingAccess = true
 
     var body: some View {
+        Group {
+            if checkingAccess || viewModel.isLoading {
+                ProgressView("Checking admin access...")
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+
+            } else if !viewModel.isAdmin {
+                ContentUnavailableView(
+                    "Admin Access Required",
+                    systemImage: "lock.shield",
+                    description: Text(
+                        viewModel.errorMessage ??
+                        "This account is not authorised to access the admin dashboard."
+                    )
+                )
+
+            } else {
+                dashboardContent
+            }
+        }
+        .navigationTitle("Dashboard")
+        .task {
+            checkingAccess = true
+
+            let allowed = await viewModel.checkAdminAccess()
+
+            if allowed {
+                await viewModel.loadStatistics()
+                startPriorityRequestListener()
+            }
+
+            checkingAccess = false
+        }
+        .refreshable {
+            guard viewModel.isAdmin else { return }
+            await viewModel.loadStatistics()
+        }
+        .onDisappear {
+            requestListener?.remove()
+            requestListener = nil
+        }
+    }
+
+    private var dashboardContent: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
                 VStack(alignment: .leading, spacing: 6) {
@@ -55,56 +70,110 @@ struct AdminDashboardView: View {
                 ) {
                     statisticCard(
                         title: "Total Reports",
-                        count: reports.count,
+                        count: viewModel.statistics.total,
                         symbol: "doc.text"
                     )
 
                     statisticCard(
-                        title: "Pending",
-                        count: pendingCount,
+                        title: "Pending Reports",
+                        count: viewModel.statistics.pending,
                         symbol: "clock"
                     )
 
                     statisticCard(
                         title: "Lost Items",
-                        count: lostCount,
+                        count: viewModel.statistics.lost,
                         symbol: "magnifyingglass"
                     )
 
                     statisticCard(
                         title: "Found Items",
-                        count: foundCount,
+                        count: viewModel.statistics.found,
                         symbol: "checkmark.circle"
                     )
 
                     statisticCard(
                         title: "Urgent Reviews",
-                        count: urgentCount,
+                        count: viewModel.statistics.urgent,
                         symbol: "bell.badge"
+                    )
+
+                    statisticCard(
+                        title: "Priority Requests",
+                        count: viewModel.pendingPriorityCount,
+                        symbol: "exclamationmark.bell.fill"
                     )
                 }
 
-                if let errorMessage {
-                    Text(errorMessage)
+                if let error = viewModel.errorMessage {
+                    Text(error)
                         .font(.footnote)
                         .foregroundStyle(.red)
                 }
 
-                Text("Admin responsibilities")
+                Text("Priority Alert Management")
                     .font(.title3.bold())
 
-                Label("Review submitted reports", systemImage: "doc.text.magnifyingglass")
-                Label("Approve or reject urgent alerts", systemImage: "bell.badge")
-                Label("Track item return status", systemImage: "checkmark.circle")
+                NavigationLink {
+                    PriorityRequestsView()
+                } label: {
+                    HStack(spacing: 12) {
+                        Image(systemName: "bell.badge.fill")
+                            .font(.title2)
+                            .foregroundStyle(.red)
+
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Review Priority Requests")
+                                .font(.headline)
+
+                            Text(
+                                "\(viewModel.pendingPriorityCount) waiting for review"
+                            )
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                        }
+
+                        Spacer()
+
+                        Image(systemName: "chevron.right")
+                            .foregroundStyle(.secondary)
+                    }
+                    .padding()
+                    .background(.regularMaterial)
+                    .clipShape(
+                        RoundedRectangle(cornerRadius: 14)
+                    )
+                }
+                .buttonStyle(.plain)
+
+                NavigationLink {
+                    AdminAlertsView()
+                } label: {
+                    Label(
+                        "Manage Published Alerts",
+                        systemImage: "megaphone.fill"
+                    )
+                }
+
+                Text("Admin Responsibilities")
+                    .font(.title3.bold())
+
+                Label(
+                    "Review submitted reports",
+                    systemImage: "doc.text.magnifyingglass"
+                )
+
+                Label(
+                    "Approve or reject priority requests",
+                    systemImage: "bell.badge"
+                )
+
+                Label(
+                    "Track item return status",
+                    systemImage: "checkmark.circle"
+                )
             }
             .padding()
-        }
-        .navigationTitle("Dashboard")
-        .task {
-            await loadReports()
-        }
-        .refreshable {
-            await loadReports()
         }
     }
 
@@ -130,25 +199,20 @@ struct AdminDashboardView: View {
         .clipShape(RoundedRectangle(cornerRadius: 16))
     }
 
-    @MainActor
-    private func loadReports() async {
-        guard Auth.auth().currentUser != nil else {
-            errorMessage = "Please sign in again."
-            isLoading = false
-            return
-        }
+    private func startPriorityRequestListener() {
+        guard requestListener == nil else { return }
 
-        do {
-            let snapshot = try await db
-                .collection("reports")
-                .getDocuments()
-
-            reports = snapshot.documents.map { $0.data() }
-            errorMessage = nil
-        } catch {
-            errorMessage = "Could not load reports. Check your connection and Firestore rules."
-        }
-
-        isLoading = false
+        requestListener = PriorityAlertService.shared
+            .listenForPendingRequests { requests in
+                Task { @MainActor in
+                    viewModel.updatePendingPriorityCount(requests.count)
+                }
+            } onError: { error in
+                Task { @MainActor in
+                    viewModel.errorMessage =
+                        "Could not load priority requests: " +
+                        error.localizedDescription
+                }
+            }
     }
 }
