@@ -135,6 +135,79 @@ final class ReportStore: ObservableObject {
         }
     }
 
+    // MARK: - Update an existing report
+
+    func updateReport(
+        report: LostFoundItem,
+        itemName: String,
+        category: String,
+        description: String,
+        location: String,
+        reportType: String,
+        completion: @escaping (Result<Void, Error>) -> Void
+    ) {
+        guard let user = Auth.auth().currentUser,
+              user.uid == report.userID else {
+            let error = NSError(
+                domain: "UniFind",
+                code: 403,
+                userInfo: [
+                    NSLocalizedDescriptionKey:
+                        "You can only edit your own reports. Please sign in again."
+                ]
+            )
+            completion(.failure(error))
+            return
+        }
+
+        let trimmedName = itemName.trimmingCharacters(
+            in: .whitespacesAndNewlines
+        )
+        let trimmedDescription = description.trimmingCharacters(
+            in: .whitespacesAndNewlines
+        )
+        let trimmedLocation = location.trimmingCharacters(
+            in: .whitespacesAndNewlines
+        )
+
+        guard !trimmedName.isEmpty,
+              !trimmedLocation.isEmpty else {
+            let error = NSError(
+                domain: "UniFind",
+                code: 400,
+                userInfo: [
+                    NSLocalizedDescriptionKey:
+                        "Item name and location are required."
+                ]
+            )
+            completion(.failure(error))
+            return
+        }
+
+        let changes: [String: Any] = [
+            "itemName": trimmedName,
+            "category": category,
+            "description": trimmedDescription,
+            "location": trimmedLocation,
+            "reportType": reportType
+        ]
+
+        db.collection("reports")
+            .document(report.id)
+            .updateData(changes) { [weak self] error in
+                Task { @MainActor in
+                    if let error {
+                        self?.errorMessage =
+                            "Unable to update report: \(error.localizedDescription)"
+                        completion(.failure(error))
+                    } else {
+                        self?.errorMessage = nil
+                        completion(.success(()))
+                    }
+                }
+            }
+    }
+
     // MARK: - Clear error
 
     func clearError() {

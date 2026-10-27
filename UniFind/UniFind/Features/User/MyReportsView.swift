@@ -1,14 +1,17 @@
 
 import SwiftUI
-import Combine
 
 struct MyReportsView: View {
     @ObservedObject private var reportStore = ReportStore.shared
+    @State private var reportToEdit: LostFoundItem?
 
     var body: some View {
         NavigationStack {
             Group {
-                if reportStore.reports.isEmpty {
+                if reportStore.isLoading && reportStore.reports.isEmpty {
+                    ProgressView("Loading your reports...")
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                } else if reportStore.reports.isEmpty {
                     emptyState
                 } else {
                     List {
@@ -20,6 +23,11 @@ struct MyReportsView: View {
                 }
             }
             .navigationTitle("My Reports")
+            .sheet(item: $reportToEdit) { report in
+                NavigationStack {
+                    EditReportView(report: report)
+                }
+            }
         }
     }
 
@@ -56,7 +64,7 @@ struct MyReportsView: View {
                         .background(Color.gray.opacity(0.12))
                 }
             }
-            .frame(width: 90, height: 90)
+            .frame(width: 82, height: 82)
             .clipShape(RoundedRectangle(cornerRadius: 10))
 
             VStack(alignment: .leading, spacing: 6) {
@@ -84,6 +92,19 @@ struct MyReportsView: View {
                 .foregroundStyle(
                     report.reportType == "Lost" ? .red : .green
                 )
+
+                Text("Status: \(report.status)")
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+
+                Button {
+                    reportToEdit = report
+                } label: {
+                    Label("Edit Report", systemImage: "pencil")
+                        .font(.subheadline.weight(.semibold))
+                }
+                .buttonStyle(.bordered)
+                .padding(.top, 3)
             }
 
             Spacer(minLength: 0)
