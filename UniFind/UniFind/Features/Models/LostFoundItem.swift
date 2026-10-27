@@ -10,14 +10,11 @@ struct LostFoundItem: Identifiable {
     var description: String
     var location: String
     var reportType: String
-
     var userID: String
     var dateReported: Date
     var status: String
-
     var imageURL: String?
     var image: UIImage?
-
     var latitude: Double?
     var longitude: Double?
 
@@ -31,7 +28,7 @@ struct LostFoundItem: Identifiable {
         image: UIImage? = nil,
         userID: String = "",
         dateReported: Date = Date(),
-        status: String = "Pending",
+        status: String = "Open",
         imageURL: String? = nil,
         latitude: Double? = nil,
         longitude: Double? = nil
@@ -51,6 +48,7 @@ struct LostFoundItem: Identifiable {
         self.longitude = longitude
     }
 
+    // Firestore field names must match the security rules.
     var firestoreData: [String: Any] {
         var data: [String: Any] = [
             "itemName": itemName,
@@ -58,14 +56,14 @@ struct LostFoundItem: Identifiable {
             "description": description,
             "location": location,
             "reportType": reportType,
-            "userID": userID,
-            "dateReported": Timestamp(date: dateReported),
+            "userId": userID,
+            "createdAt": Timestamp(date: dateReported),
             "status": status
         ]
 
-        data["imageURL"] = imageURL as Any? ?? NSNull()
-        data["latitude"] = latitude as Any? ?? NSNull()
-        data["longitude"] = longitude as Any? ?? NSNull()
+        data["imageURL"] = imageURL ?? ""
+        data["latitude"] = latitude.map { $0 as Any } ?? NSNull()
+        data["longitude"] = longitude.map { $0 as Any } ?? NSNull()
 
         return data
     }
@@ -78,8 +76,15 @@ struct LostFoundItem: Identifiable {
             let category = data["category"] as? String,
             let description = data["description"] as? String,
             let location = data["location"] as? String,
-            let reportType = data["reportType"] as? String,
-            let userID = data["userID"] as? String
+            let reportType = data["reportType"] as? String
+        else {
+            return nil
+        }
+
+        // Support both the new and old field names.
+        guard let userID =
+            (data["userId"] as? String) ??
+            (data["userID"] as? String)
         else {
             return nil
         }
@@ -92,18 +97,18 @@ struct LostFoundItem: Identifiable {
         self.reportType = reportType
         self.userID = userID
 
-        if let timestamp = data["dateReported"] as? Timestamp {
+        if let timestamp = data["createdAt"] as? Timestamp {
+            self.dateReported = timestamp.dateValue()
+        } else if let timestamp = data["dateReported"] as? Timestamp {
             self.dateReported = timestamp.dateValue()
         } else {
             self.dateReported = Date()
         }
 
-        self.status = data["status"] as? String ?? "Pending"
+        self.status = data["status"] as? String ?? "Open"
         self.imageURL = data["imageURL"] as? String
         self.latitude = data["latitude"] as? Double
         self.longitude = data["longitude"] as? Double
-
-        // Images are not loaded from Firebase Storage in this version.
         self.image = nil
     }
 }

@@ -2,20 +2,25 @@
 import Foundation
 import FirebaseAuth
 import FirebaseFirestore
+import WidgetKit
+
+private let appGroupID = "group.com.example.UniFind"
 
 final class PriorityAlertService {
+
     static let shared = PriorityAlertService()
 
     private let db = Firestore.firestore()
 
     private init() {}
 
-    // MARK: - Submit a request
+    // MARK: - Submit Request
 
     func submitRequest(
         itemName: String,
         description: String,
         location: String,
+        reportId: String? = nil,
         completion: @escaping (Result<Void, Error>) -> Void
     ) {
         guard let uid = Auth.auth().currentUser?.uid else {
@@ -23,7 +28,7 @@ final class PriorityAlertService {
             return
         }
 
-        let data: [String: Any] = [
+        var data: [String: Any] = [
             "itemName": itemName,
             "description": description,
             "location": location,
@@ -32,27 +37,32 @@ final class PriorityAlertService {
             "createdAt": FieldValue.serverTimestamp()
         ]
 
-        db.collection("priorityAlertRequests").addDocument(
-            data: data
-        ) { error in
-            if let error {
-                completion(.failure(error))
-            } else {
-                completion(.success(()))
-            }
+        if let reportId = reportId {
+            data["reportId"] = reportId
         }
+
+        db.collection("priorityAlertRequests")
+            .addDocument(data: data) { error in
+                if let error = error {
+                    completion(.failure(error))
+                } else {
+                    completion(.success(()))
+                }
+            }
     }
 
-    // MARK: - Listen for pending requests
+    // MARK: - Listen for Pending Requests
 
     func listenForPendingRequests(
         onChange: @escaping ([PriorityAlertRequest]) -> Void,
         onError: @escaping (Error) -> Void
     ) -> ListenerRegistration {
+
         return db.collection("priorityAlertRequests")
             .whereField("status", isEqualTo: "pending")
             .addSnapshotListener { snapshot, error in
-                if let error {
+
+                if let error = error {
                     onError(error)
                     return
                 }
@@ -64,11 +74,91 @@ final class PriorityAlertService {
                     )
                 } ?? []
 
+                UserDefaults(suiteName: appGroupID)?
+                    .set(
+                        requests.count,
+                        forKey: "adminPendingRequestCount"
+                    )
+
+                WidgetCenter.shared.reloadAllTimelines()
+
                 onChange(requests)
             }
     }
 
-    // MARK: - Approve and publish an alert
+    // MARK: - Listen for Active Alerts
+
+    func listenForActiveAlerts(
+        onChange: @escaping ([PriorityAlert]) -> Void,
+        onError: @escaping (Error) -> Void
+    ) -> ListenerRegistration {
+
+        return db.collection("priorityAlerts")
+            .whereField("isActive", isEqualTo: true)
+            .addSnapshotListener { snapshot, error in
+
+                if let error = error {
+                    onError(error)
+                    return
+                }
+
+                let documents = snapshot?.documents ?? []
+
+                let sortedDocuments = documents.sorted {
+                    let firstDate =
+                        ($0.data()["createdAt"] as? Timestamp)?
+                        .dateValue() ?? .distantPast
+
+                    let secondDate =
+                        ($1.data()["createdAt"] as? Timestamp)?
+                        .dateValue() ?? .distantPast
+
+                    return firstDate > secondDate
+                }
+
+                // Convert Firestore documents into PriorityAlert models.
+                let alerts: [PriorityAlert] =
+                    sortedDocuments.compactMap { document in
+                        PriorityAlert(
+                            id: document.documentID,
+                            data: document.data()
+                        )
+                    }
+
+                // Cache the latest alert for the widget.
+                if let latest = sortedDocuments.first {
+                    let data = latest.data()
+
+                    let cachedAlert: [String: String] = [
+                        "itemName": data["itemName"] as? String ?? "",
+                        "message": data["message"] as? String ?? "",
+                        "location": data["location"] as? String ?? ""
+                    ]
+
+                    UserDefaults(suiteName: appGroupID)?
+                        .set(
+                            cachedAlert,
+                            forKey: "latestPriorityAlert"
+                        )
+                } else {
+                    UserDefaults(suiteName: appGroupID)?
+                        .set(
+                            [
+                                "itemName": "No active alerts",
+                                "message": "Important alerts will appear here.",
+                                "location": ""
+                            ],
+                            forKey: "latestPriorityAlert"
+                        )
+                }
+
+                WidgetCenter.shared.reloadAllTimelines()
+
+                onChange(alerts)
+            }
+    }
+
+    // MARK: - Approve and Publish Alert
 
     func approveRequest(
         _ request: PriorityAlertRequest,
@@ -95,7 +185,8 @@ final class PriorityAlertService {
 
         db.runTransaction({ transaction, errorPointer -> Any? in
             do {
-                let requestSnapshot = try transaction.getDocument(requestRef)
+                let requestSnapshot =
+                    try transaction.getDocument(requestRef)
 
                 guard
                     requestSnapshot.exists,
@@ -112,22 +203,29 @@ final class PriorityAlertService {
                     return nil
                 }
 
-                transaction.setData(alertData, forDocument: alertRef)
+                transaction.setData(
+                    alertData,
+                    forDocument: alertRef
+                )
 
-                transaction.updateData([
-                    "status": "approved",
-                    "reviewedBy": adminUID,
-                    "reviewedAt": FieldValue.serverTimestamp(),
-                    "alertId": alertRef.documentID
-                ], forDocument: requestRef)
+                transaction.updateData(
+                    [
+                        "status": "approved",
+                        "reviewedBy": adminUID,
+                        "reviewedAt": FieldValue.serverTimestamp(),
+                        "alertId": alertRef.documentID
+                    ],
+                    forDocument: requestRef
+                )
 
                 return nil
+
             } catch {
                 errorPointer?.pointee = error as NSError
                 return nil
             }
         }) { _, error in
-            if let error {
+            if let error = error {
                 completion(.failure(error))
             } else {
                 completion(.success(()))
@@ -135,7 +233,7 @@ final class PriorityAlertService {
         }
     }
 
-    // MARK: - Reject a request
+    // MARK: - Reject Request
 
     func rejectRequest(
         _ request: PriorityAlertRequest,
@@ -146,20 +244,75 @@ final class PriorityAlertService {
             return
         }
 
-        db.collection("priorityAlertRequests")
+        let requestRef = db.collection("priorityAlertRequests")
             .document(request.id)
-            .updateData([
-                "status": "rejected",
-                "reviewedBy": adminUID,
-                "reviewedAt": FieldValue.serverTimestamp()
-            ]) { error in
-                if let error {
+
+        db.runTransaction({ transaction, errorPointer -> Any? in
+            do {
+                let snapshot = try transaction.getDocument(requestRef)
+
+                guard
+                    snapshot.exists,
+                    snapshot.data()?["status"] as? String == "pending"
+                else {
+                    errorPointer?.pointee = NSError(
+                        domain: "UniFind",
+                        code: 409,
+                        userInfo: [
+                            NSLocalizedDescriptionKey:
+                                "This request has already been processed."
+                        ]
+                    )
+                    return nil
+                }
+
+                transaction.updateData(
+                    [
+                        "status": "rejected",
+                        "reviewedBy": adminUID,
+                        "reviewedAt": FieldValue.serverTimestamp()
+                    ],
+                    forDocument: requestRef
+                )
+
+                return nil
+
+            } catch {
+                errorPointer?.pointee = error as NSError
+                return nil
+            }
+        }) { _, error in
+            if let error = error {
+                completion(.failure(error))
+            } else {
+                completion(.success(()))
+            }
+        }
+    }
+
+    // MARK: - Deactivate Published Alert
+
+    func deactivateAlert(
+        id alertID: String,
+        completion: @escaping (Result<Void, Error>) -> Void
+    ) {
+        guard Auth.auth().currentUser != nil else {
+            completion(.failure(ServiceError.notAuthenticated))
+            return
+        }
+
+        db.collection("priorityAlerts")
+            .document(alertID)
+            .updateData(["isActive": false]) { error in
+                if let error = error {
                     completion(.failure(error))
                 } else {
                     completion(.success(()))
                 }
             }
     }
+
+    // MARK: - Errors
 
     enum ServiceError: LocalizedError {
         case notAuthenticated

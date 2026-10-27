@@ -7,26 +7,101 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		C221194230907AF800AB93A4 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C221194130907AF800AB93A4 /* WidgetKit.framework */; };
+		C221194430907AF800AB93A4 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C221194330907AF800AB93A4 /* SwiftUI.framework */; };
+		C221195530907AFA00AB93A4 /* UniFindWidgetExtensionExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = C221194030907AF800AB93A4 /* UniFindWidgetExtensionExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		C229D8FF308C6F700015AC9D /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = C229D8FE308C6F6F0015AC9D /* GoogleService-Info.plist */; };
 		C229D93B308C8E330015AC9D /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = C229D93A308C8E330015AC9D /* FirebaseAuth */; };
 		C229D93D308C8E330015AC9D /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = C229D93C308C8E330015AC9D /* FirebaseCore */; };
 		C229D93F308C8E330015AC9D /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = C229D93E308C8E330015AC9D /* FirebaseFirestore */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		C221195330907AFA00AB93A4 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = C28377213084830500E5375C /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = C221193F30907AF800AB93A4;
+			remoteInfo = UniFindWidgetExtensionExtension;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		C221195A30907AFA00AB93A4 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				C221195530907AFA00AB93A4 /* UniFindWidgetExtensionExtension.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
+		C221194030907AF800AB93A4 /* UniFindWidgetExtensionExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = UniFindWidgetExtensionExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		C221194130907AF800AB93A4 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
+		C221194330907AF800AB93A4 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
 		C229D8FE308C6F6F0015AC9D /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		C28377293084830500E5375C /* UniFind.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = UniFind.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		C221195630907AFA00AB93A4 /* Exceptions for "UniFindWidgetExtension" folder in "UniFindWidgetExtensionExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = C221193F30907AF800AB93A4 /* UniFindWidgetExtensionExtension */;
+		};
+		C221195C30907B3800AB93A4 /* Exceptions for "UniFind" folder in "UniFind" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				"Widget Extension/UniFindWidget.swift",
+			);
+			target = C28377283084830500E5375C /* UniFind */;
+		};
+		C221195D30907B3800AB93A4 /* Exceptions for "UniFind" folder in "UniFindWidgetExtensionExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				"Widget Extension/UniFindWidget.swift",
+			);
+			target = C221193F30907AF800AB93A4 /* UniFindWidgetExtensionExtension */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
+		C221194530907AF800AB93A4 /* UniFindWidgetExtension */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				C221195630907AFA00AB93A4 /* Exceptions for "UniFindWidgetExtension" folder in "UniFindWidgetExtensionExtension" target */,
+			);
+			path = UniFindWidgetExtension;
+			sourceTree = "<group>";
+		};
 		C283772B3084830500E5375C /* UniFind */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				C221195C30907B3800AB93A4 /* Exceptions for "UniFind" folder in "UniFind" target */,
+				C221195D30907B3800AB93A4 /* Exceptions for "UniFind" folder in "UniFindWidgetExtensionExtension" target */,
+			);
 			path = UniFind;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		C221193D30907AF800AB93A4 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C221194430907AF800AB93A4 /* SwiftUI.framework in Frameworks */,
+				C221194230907AF800AB93A4 /* WidgetKit.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		C28377263084830500E5375C /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -43,6 +118,8 @@
 		C229D91A308C86E70015AC9D /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				C221194130907AF800AB93A4 /* WidgetKit.framework */,
+				C221194330907AF800AB93A4 /* SwiftUI.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -52,6 +129,7 @@
 			children = (
 				C229D8FE308C6F6F0015AC9D /* GoogleService-Info.plist */,
 				C283772B3084830500E5375C /* UniFind */,
+				C221194530907AF800AB93A4 /* UniFindWidgetExtension */,
 				C229D91A308C86E70015AC9D /* Frameworks */,
 				C283772A3084830500E5375C /* Products */,
 			);
@@ -61,6 +139,7 @@
 			isa = PBXGroup;
 			children = (
 				C28377293084830500E5375C /* UniFind.app */,
+				C221194030907AF800AB93A4 /* UniFindWidgetExtensionExtension.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -68,6 +147,28 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		C221193F30907AF800AB93A4 /* UniFindWidgetExtensionExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = C221195730907AFA00AB93A4 /* Build configuration list for PBXNativeTarget "UniFindWidgetExtensionExtension" */;
+			buildPhases = (
+				C221193C30907AF800AB93A4 /* Sources */,
+				C221193D30907AF800AB93A4 /* Frameworks */,
+				C221193E30907AF800AB93A4 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				C221194530907AF800AB93A4 /* UniFindWidgetExtension */,
+			);
+			name = UniFindWidgetExtensionExtension;
+			packageProductDependencies = (
+			);
+			productName = UniFindWidgetExtensionExtension;
+			productReference = C221194030907AF800AB93A4 /* UniFindWidgetExtensionExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 		C28377283084830500E5375C /* UniFind */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = C28377343084830700E5375C /* Build configuration list for PBXNativeTarget "UniFind" */;
@@ -75,10 +176,12 @@
 				C28377253084830500E5375C /* Sources */,
 				C28377263084830500E5375C /* Frameworks */,
 				C28377273084830500E5375C /* Resources */,
+				C221195A30907AFA00AB93A4 /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				C221195430907AFA00AB93A4 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				C283772B3084830500E5375C /* UniFind */,
@@ -103,6 +206,9 @@
 				LastSwiftUpdateCheck = 2620;
 				LastUpgradeCheck = 2620;
 				TargetAttributes = {
+					C221193F30907AF800AB93A4 = {
+						CreatedOnToolsVersion = 26.2;
+					};
 					C28377283084830500E5375C = {
 						CreatedOnToolsVersion = 26.2;
 						LastSwiftMigration = 2620;
@@ -127,11 +233,19 @@
 			projectRoot = "";
 			targets = (
 				C28377283084830500E5375C /* UniFind */,
+				C221193F30907AF800AB93A4 /* UniFindWidgetExtensionExtension */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		C221193E30907AF800AB93A4 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		C28377273084830500E5375C /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -143,6 +257,13 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		C221193C30907AF800AB93A4 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		C28377253084830500E5375C /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -152,7 +273,75 @@
 		};
 /* End PBXSourcesBuildPhase section */
 
+/* Begin PBXTargetDependency section */
+		C221195430907AFA00AB93A4 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = C221193F30907AF800AB93A4 /* UniFindWidgetExtensionExtension */;
+			targetProxy = C221195330907AFA00AB93A4 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
 /* Begin XCBuildConfiguration section */
+		C221195830907AFA00AB93A4 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = UniFindWidgetExtension/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = UniFindWidgetExtension;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "cobsccomp251p-040.UniFind.UniFindWidgetExtension";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		C221195930907AFA00AB93A4 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = UniFindWidgetExtension/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = UniFindWidgetExtension;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "cobsccomp251p-040.UniFind.UniFindWidgetExtension";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 		C28377323084830700E5375C /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -287,6 +476,7 @@
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -320,6 +510,7 @@
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -340,6 +531,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		C221195730907AFA00AB93A4 /* Build configuration list for PBXNativeTarget "UniFindWidgetExtensionExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C221195830907AFA00AB93A4 /* Debug */,
+				C221195930907AFA00AB93A4 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		C28377243084830500E5375C /* Build configuration list for PBXProject "UniFind" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (

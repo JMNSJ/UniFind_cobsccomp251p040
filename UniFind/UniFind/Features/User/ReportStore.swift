@@ -52,7 +52,6 @@ final class ReportStore: ObservableObject {
 
         listener = db.collection("reports")
             .addSnapshotListener { [weak self] snapshot, error in
-
                 Task { @MainActor in
                     guard let self else { return }
 
@@ -70,9 +69,7 @@ final class ReportStore: ObservableObject {
                     }
 
                     self.allReports = documents
-                        .compactMap {
-                            LostFoundItem(document: $0)
-                        }
+                        .compactMap { LostFoundItem(document: $0) }
                         .sorted {
                             $0.dateReported > $1.dateReported
                         }
@@ -114,27 +111,33 @@ final class ReportStore: ObservableObject {
         var newReport = report
         newReport.userID = user.uid
         newReport.dateReported = Date()
-        newReport.status = "Pending"
+        newReport.status = "Open"
 
-        db.collection("reports")
+        let document = db.collection("reports")
             .document(newReport.id)
-            .setData(newReport.firestoreData) { [weak self] error in
 
-                Task { @MainActor in
-                    if let error {
-                        self?.errorMessage =
-                            "Unable to submit report: \(error.localizedDescription)"
-                        completion?(.failure(error))
-                    } else {
-                        self?.errorMessage = nil
-                        completion?(.success(()))
-                    }
+        document.setData(newReport.firestoreData) { [weak self] error in
+            Task { @MainActor in
+                if let error {
+                    self?.errorMessage =
+                        "Unable to submit report: \(error.localizedDescription)"
+                    completion?(.failure(error))
+                } else {
+                    self?.errorMessage = nil
+
+                    // Start listening if this is the first report
+                    // after the user signed in.
+                    self?.startListening(for: user.uid)
+
+                    completion?(.success(()))
                 }
             }
+        }
     }
+
+    // MARK: - Clear error
 
     func clearError() {
         errorMessage = nil
     }
 }
-

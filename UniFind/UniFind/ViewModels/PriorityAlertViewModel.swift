@@ -1,9 +1,11 @@
+
 import Combine
 import Foundation
 import FirebaseFirestore
 
 @MainActor
 final class PriorityAlertViewModel: ObservableObject {
+
     @Published var requests: [PriorityAlertRequest] = []
     @Published var alerts: [PriorityAlert] = []
     @Published var isLoading = false
@@ -12,6 +14,8 @@ final class PriorityAlertViewModel: ObservableObject {
 
     private var requestListener: ListenerRegistration?
     private var alertListener: ListenerRegistration?
+
+    // MARK: - Listen for Pending Requests
 
     func startListeningForRequests() {
         guard requestListener == nil else { return }
@@ -31,6 +35,8 @@ final class PriorityAlertViewModel: ObservableObject {
             }
     }
 
+    // MARK: - Listen for Active Alerts
+
     func startListeningForAlerts() {
         guard alertListener == nil else { return }
 
@@ -46,6 +52,8 @@ final class PriorityAlertViewModel: ObservableObject {
             }
     }
 
+    // MARK: - Submit Request
+
     func submitRequest(
         itemName: String,
         description: String,
@@ -56,22 +64,35 @@ final class PriorityAlertViewModel: ObservableObject {
         defer { isLoading = false }
 
         do {
-            try await PriorityAlertService.shared.submitRequest(
-                itemName: itemName,
-                description: description,
-                location: location,
-                reportId: reportId
-            )
-            successMessage = "Your request has been submitted for review."
+            try await withCheckedThrowingContinuation {
+                (continuation: CheckedContinuation<Void, Error>) in
+
+                PriorityAlertService.shared.submitRequest(
+                    itemName: itemName,
+                    description: description,
+                    location: location,
+                    reportId: reportId
+                ) { result in
+                    continuation.resume(with: result)
+                }
+            }
+
+            successMessage =
+                "Your request has been submitted for review."
             errorMessage = nil
+
         } catch {
             errorMessage = error.localizedDescription
         }
     }
 
+    // MARK: - Approve Request
+
     func approve(_ request: PriorityAlertRequest) async {
         await process(request, approve: true)
     }
+
+    // MARK: - Reject Request
 
     func reject(_ request: PriorityAlertRequest) async {
         await process(request, approve: false)
@@ -85,19 +106,39 @@ final class PriorityAlertViewModel: ObservableObject {
         defer { isLoading = false }
 
         do {
-            if approve {
-                try await PriorityAlertService.shared.approveRequest(request)
-                successMessage = "The alert has been approved and published."
-            } else {
-                try await PriorityAlertService.shared.rejectRequest(request)
-                successMessage = "The request has been rejected."
+            try await withCheckedThrowingContinuation {
+                (continuation: CheckedContinuation<Void, Error>) in
+
+                let completion: (Result<Void, Error>) -> Void = {
+                    result in
+                    continuation.resume(with: result)
+                }
+
+                if approve {
+                    PriorityAlertService.shared.approveRequest(
+                        request,
+                        completion: completion
+                    )
+                } else {
+                    PriorityAlertService.shared.rejectRequest(
+                        request,
+                        completion: completion
+                    )
+                }
             }
 
+            successMessage = approve
+                ? "The alert has been approved and published."
+                : "The request has been rejected."
+
             errorMessage = nil
+
         } catch {
             errorMessage = error.localizedDescription
         }
     }
+
+    // MARK: - Stop Listeners
 
     func stopListening() {
         requestListener?.remove()

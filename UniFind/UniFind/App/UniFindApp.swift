@@ -3,7 +3,6 @@ import FirebaseCore
 
 @main
 struct UniFindApp: App {
-
     init() {
         FirebaseApp.configure()
     }

@@ -2,7 +2,7 @@
 import SwiftUI
 import WidgetKit
 
-private let appGroupID = "group.com.example.UniFind"
+// MARK: - Widget Entry
 
 struct UniFindWidgetEntry: TimelineEntry {
     let date: Date
@@ -12,11 +12,14 @@ struct UniFindWidgetEntry: TimelineEntry {
     let location: String
 }
 
+// MARK: - Timeline Provider
+
 struct UniFindWidgetProvider: TimelineProvider {
+
     func placeholder(in context: Context) -> UniFindWidgetEntry {
         UniFindWidgetEntry(
             date: .now,
-            pendingCount: 2,
+            pendingCount: 3,
             itemName: "Student ID Card",
             message: "Urgent: ID card reported lost.",
             location: "University Library"
@@ -27,21 +30,20 @@ struct UniFindWidgetProvider: TimelineProvider {
         in context: Context,
         completion: @escaping (UniFindWidgetEntry) -> Void
     ) {
-        completion(makeEntry())
+        completion(sampleEntry())
     }
 
     func getTimeline(
         in context: Context,
         completion: @escaping (Timeline<UniFindWidgetEntry>) -> Void
     ) {
-        let entry = makeEntry()
+        let entry = sampleEntry()
 
-        // iOS controls when the next refresh actually occurs.
         let nextUpdate = Calendar.current.date(
             byAdding: .minute,
             value: 30,
             to: .now
-        ) ?? .now.addingTimeInterval(1800)
+        ) ?? Date.now.addingTimeInterval(1800)
 
         completion(
             Timeline(
@@ -51,30 +53,21 @@ struct UniFindWidgetProvider: TimelineProvider {
         )
     }
 
-    private func makeEntry() -> UniFindWidgetEntry {
-        let defaults = UserDefaults(suiteName: appGroupID)
-
-        let count = defaults?.integer(
-            forKey: "adminPendingRequestCount"
-        ) ?? 0
-
-        let alert = defaults?.dictionary(
-            forKey: "latestPriorityAlert"
-        ) as? [String: String] ?? [:]
-
-        return UniFindWidgetEntry(
+    private func sampleEntry() -> UniFindWidgetEntry {
+        UniFindWidgetEntry(
             date: .now,
-            pendingCount: count,
-            itemName: alert["itemName"] ?? "No active alerts",
-            message: alert["message"] ?? "Important alerts will appear here.",
-            location: alert["location"] ?? ""
+            pendingCount: 3,
+            itemName: "Student ID Card",
+            message: "Urgent: ID card reported lost.",
+            location: "University Library"
         )
     }
 }
 
-// MARK: Widget 1 — Admin pending requests
+// MARK: - Admin Priority Requests Widget
 
 struct AdminPriorityRequestsWidget: Widget {
+
     let kind = "AdminPriorityRequestsWidget"
 
     var body: some WidgetConfiguration {
@@ -83,8 +76,12 @@ struct AdminPriorityRequestsWidget: Widget {
             provider: UniFindWidgetProvider()
         ) { entry in
             VStack(alignment: .leading, spacing: 8) {
-                Label("UniFind Admin", systemImage: "shield.fill")
-                    .font(.headline)
+
+                Label(
+                    "UniFind Admin",
+                    systemImage: "shield.fill"
+                )
+                .font(.headline)
 
                 Text("\(entry.pendingCount)")
                     .font(.system(size: 34, weight: .bold))
@@ -95,24 +92,23 @@ struct AdminPriorityRequestsWidget: Widget {
 
                 Spacer(minLength: 0)
 
-                Link(
-                    "Open requests",
-                    destination: URL(string: "unifind://admin/priority-requests")!
-                )
-                .font(.caption.bold())
+                Text("Open UniFind to review requests.")
+                    .font(.caption2)
+                    .foregroundStyle(.blue)
             }
             .padding()
             .containerBackground(.background, for: .widget)
         }
         .configurationDisplayName("Admin Priority Requests")
-        .description("Shows the number of pending priority alert requests.")
+        .description("Shows sample pending priority requests.")
         .supportedFamilies([.systemSmall, .systemMedium])
     }
 }
 
-// MARK: Widget 2 — Shared high-priority alert
+// MARK: - High-Priority Alert Widget
 
 struct HighPriorityAlertWidget: Widget {
+
     let kind = "HighPriorityAlertWidget"
 
     var body: some WidgetConfiguration {
@@ -121,9 +117,13 @@ struct HighPriorityAlertWidget: Widget {
             provider: UniFindWidgetProvider()
         ) { entry in
             VStack(alignment: .leading, spacing: 6) {
-                Label("HIGH PRIORITY", systemImage: "bell.badge.fill")
-                    .font(.caption.bold())
-                    .foregroundStyle(.red)
+
+                Label(
+                    "HIGH PRIORITY",
+                    systemImage: "bell.badge.fill"
+                )
+                .font(.caption.bold())
+                .foregroundStyle(.red)
 
                 Text(entry.itemName)
                     .font(.headline)
@@ -134,25 +134,26 @@ struct HighPriorityAlertWidget: Widget {
                     .lineLimit(2)
 
                 if !entry.location.isEmpty {
-                    Label(entry.location, systemImage: "mappin")
-                        .font(.caption2)
-                        .lineLimit(1)
-                        .foregroundStyle(.secondary)
+                    Label(
+                        entry.location,
+                        systemImage: "mappin"
+                    )
+                    .font(.caption2)
+                    .lineLimit(1)
+                    .foregroundStyle(.secondary)
                 }
 
                 Spacer(minLength: 0)
 
-                Link(
-                    "View alert",
-                    destination: URL(string: "unifind://priority-alerts")!
-                )
-                .font(.caption.bold())
+                Text("Example alert")
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
             }
             .padding()
             .containerBackground(.background, for: .widget)
         }
         .configurationDisplayName("UniFind High-Priority Alert")
-        .description("Displays the latest approved important lost-item alert.")
+        .description("Shows a sample important lost-item alert.")
         .supportedFamilies([.systemSmall, .systemMedium])
     }
 }
