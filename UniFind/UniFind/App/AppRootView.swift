@@ -2,6 +2,7 @@
 import SwiftUI
 
 struct AppRootView: View {
+
     @StateObject private var authViewModel = AuthenticationViewModel()
 
     @State private var hasCompletedOnboarding = false
@@ -11,40 +12,55 @@ struct AppRootView: View {
 
     var body: some View {
         Group {
-            if authViewModel.isLoggedIn {
-                if isCheckingRole {
-                    ProgressView("Checking account...")
-                } else if let roleCheckError {
-                    VStack(spacing: 16) {
-                        Image(systemName: "exclamationmark.shield")
-                            .font(.largeTitle)
+            if !authViewModel.isLoggedIn {
 
-                        Text("Unable to verify your account")
-                            .font(.headline)
+                if hasCompletedOnboarding {
+                    LoginView(authViewModel: authViewModel)
+                } else {
+                    OnboardingView {
+                        hasCompletedOnboarding = true
+                    }
+                }
 
-                        Text(roleCheckError)
-                            .multilineTextAlignment(.center)
-                            .foregroundStyle(.secondary)
+            } else if isCheckingRole {
 
-                        Button("Sign Out") {
-                            authViewModel.logout()
+                ProgressView("Checking account...")
+
+            } else if let roleCheckError {
+
+                VStack(spacing: 16) {
+                    Image(systemName: "exclamationmark.shield")
+                        .font(.largeTitle)
+
+                    Text("Unable to verify your account")
+                        .font(.headline)
+
+                    Text(roleCheckError)
+                        .multilineTextAlignment(.center)
+                        .foregroundStyle(.secondary)
+
+                    Button("Try Again") {
+                        Task {
+                            await checkUserRole()
                         }
                     }
-                    .padding()
-                } else if isAdmin {
-                    AdminRootView {
-                        authViewModel.logout()
-                    }
-                } else {
-                    UserTabView {
+
+                    Button("Sign Out") {
                         authViewModel.logout()
                     }
                 }
-            } else if hasCompletedOnboarding {
-                LoginView(authViewModel: authViewModel)
+                .padding()
+
+            } else if isAdmin {
+
+                AdminRootView {
+                    authViewModel.logout()
+                }
+
             } else {
-                OnboardingView {
-                    hasCompletedOnboarding = true
+
+                UserTabView {
+                    authViewModel.logout()
                 }
             }
         }
@@ -55,6 +71,7 @@ struct AppRootView: View {
 
     @MainActor
     private func checkUserRole() async {
+
         guard authViewModel.isLoggedIn,
               authViewModel.userID != nil else {
             isAdmin = false
@@ -64,6 +81,7 @@ struct AppRootView: View {
         }
 
         isCheckingRole = true
+        isAdmin = false
         roleCheckError = nil
 
         do {
@@ -72,7 +90,7 @@ struct AppRootView: View {
         } catch {
             isAdmin = false
             roleCheckError =
-                "We could not verify your role in Firebase. Check your connection and Firestore permissions, then try again."
+                "We could not verify your account role. Check your internet connection and Firestore security rules, then try again."
         }
 
         isCheckingRole = false
