@@ -10,7 +10,11 @@ struct AdminRootView: View {
                 AdminDashboardView()
                     .toolbar {
                         ToolbarItem(placement: .topBarTrailing) {
-                            Button("Sign Out", action: onLogout)
+                            Button(action: onLogout) {
+                                Image(systemName: "rectangle.portrait.and.arrow.right")
+                                    .foregroundStyle(UniFindStyle.indigo)
+                            }
+                            .accessibilityLabel("Sign Out")
                         }
                     }
             }
@@ -22,7 +26,11 @@ struct AdminRootView: View {
                 AdminReportsView()
                     .toolbar {
                         ToolbarItem(placement: .topBarTrailing) {
-                            Button("Sign Out", action: onLogout)
+                            Button(action: onLogout) {
+                                Image(systemName: "rectangle.portrait.and.arrow.right")
+                                    .foregroundStyle(UniFindStyle.indigo)
+                            }
+                            .accessibilityLabel("Sign Out")
                         }
                     }
             }
@@ -30,7 +38,7 @@ struct AdminRootView: View {
                 Label("Reports", systemImage: "doc.text.magnifyingglass")
             }
         }
-        .tint(Color(red: 0.78, green: 0.96, blue: 0.40))
-        .preferredColorScheme(.dark)
+        .tint(UniFindStyle.indigo)
+        .preferredColorScheme(.light)
     }
 }

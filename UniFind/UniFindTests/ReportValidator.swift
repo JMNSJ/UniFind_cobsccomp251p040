@@ -1,16 +1,13 @@
-//
-//  UniFindTests.swift
-//  UniFindTests
-//
-//  Created by cobsccomp251p-040 on 2026-10-27.
-//
+import Foundation
 
-import Testing
-
-struct UniFindTests {
-
-    @Test func example() async throws {
-        // Write your test here and use APIs like `#expect(...)` to check expected conditions.
+enum ReportValidator {
+    static func validate(
+        itemName: String,
+        description: String,
+        location: String
+    ) -> Bool {
+        !itemName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
+        !description.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
+        !location.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
-
 }

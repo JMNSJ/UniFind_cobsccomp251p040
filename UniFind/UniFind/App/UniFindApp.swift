@@ -1,3 +1,4 @@
+
 import SwiftUI
 import FirebaseCore
 
@@ -10,6 +11,7 @@ struct UniFindApp: App {
     var body: some Scene {
         WindowGroup {
             AppRootView()
+                .preferredColorScheme(.light)
         }
     }
 }

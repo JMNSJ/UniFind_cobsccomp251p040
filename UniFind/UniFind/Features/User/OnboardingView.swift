@@ -1,319 +1,242 @@
 
 import SwiftUI
 
-struct OnboardingView: View {
+private struct OnboardingPage: Identifiable {
+    let id: Int
+    let eyebrow: String
+    let title: String
+    let highlight: String
+    let description: String
+    let symbol: String
+    let tint: Color
 
+    static let all: [OnboardingPage] = [
+        OnboardingPage(
+            id: 0,
+            eyebrow: "WELCOME TO UNIFIND",
+            title: "Find what",
+            highlight: "matters.",
+            description: "A smarter way to reconnect students with lost belongings across your university.",
+            symbol: "magnifyingglass",
+            tint: UniFindStyle.indigo
+        ),
+        OnboardingPage(
+            id: 1,
+            eyebrow: "REPORT WITH EASE",
+            title: "Lost or found?",
+            highlight: "Report it.",
+            description: "Share item details, descriptions and photos to help your campus community find missing belongings.",
+            symbol: "camera.viewfinder",
+            tint: UniFindStyle.teal
+        ),
+        OnboardingPage(
+            id: 2,
+            eyebrow: "RECONNECT YOUR CAMPUS",
+            title: "Every item",
+            highlight: "has a way home.",
+            description: "Discover reports, check possible matches and help belongings return to their owners.",
+            symbol: "heart.circle.fill",
+            tint: Color(red: 0.88, green: 0.47, blue: 0.58)
+        )
+    ]
+}
+
+struct OnboardingView: View {
     let onGetStarted: () -> Void
 
-    private let backgroundColor =
-        Color(red: 0.055, green: 0.075, blue: 0.14)
-
-    private let limeColor =
-        Color(red: 0.78, green: 0.96, blue: 0.40)
+    @State private var currentPage = 0
 
     var body: some View {
-        GeometryReader { geometry in
-            ZStack {
-                // Main dark background.
-                LinearGradient(
-                    colors: [
-                        Color(red: 0.10, green: 0.14, blue: 0.25),
-                        backgroundColor,
-                        Color(red: 0.12, green: 0.10, blue: 0.23)
-                    ],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
-                .ignoresSafeArea()
+        ZStack {
+            UniFindBackground()
 
-                // Decorative background shapes.
-                Circle()
-                    .fill(
-                        Color(red: 0.40, green: 0.35, blue: 0.85)
-                            .opacity(0.25)
-                    )
-                    .frame(width: 300, height: 300)
-                    .blur(radius: 60)
-                    .offset(x: 150, y: -geometry.size.height * 0.30)
-
-                Circle()
-                    .fill(limeColor.opacity(0.12))
-                    .frame(width: 230, height: 230)
-                    .blur(radius: 70)
-                    .offset(x: -150, y: geometry.size.height * 0.20)
-
-                VStack(spacing: 0) {
-
-                    // Brand.
-                    HStack(spacing: 10) {
-                        ZStack {
-                            RoundedRectangle(cornerRadius: 14)
-                                .fill(limeColor)
-                                .frame(width: 46, height: 46)
-
-                            Image(systemName: "magnifyingglass")
-                                .font(.system(size: 23, weight: .bold))
-                                .foregroundStyle(backgroundColor)
-                        }
-
-                        Text("UniFind")
-                            .font(.system(size: 27, weight: .bold))
-                            .tracking(-0.8)
-                            .foregroundStyle(.white)
-
-                        Spacer()
-
-                        Text("CAMPUS")
-                            .font(.system(size: 10, weight: .bold))
-                            .tracking(2)
-                            .foregroundStyle(limeColor)
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 8)
-                            .background(.white.opacity(0.08))
-                            .clipShape(Capsule())
-                    }
-                    .padding(.top, 14)
-
-                    Spacer(minLength: 24)
-
-                    // Main illustration.
+            VStack(spacing: 0) {
+                HStack(spacing: 10) {
                     ZStack {
-                        RoundedRectangle(cornerRadius: 36)
+                        RoundedRectangle(cornerRadius: 13)
+                            .fill(UniFindStyle.indigo)
+                            .frame(width: 42, height: 42)
+
+                        Image(systemName: "magnifyingglass")
+                            .font(.system(size: 21, weight: .bold))
+                            .foregroundStyle(.white)
+                    }
+
+                    Text("UniFind")
+                        .font(.system(size: 25, weight: .bold, design: .rounded))
+                        .tracking(-0.7)
+                        .foregroundStyle(UniFindStyle.ink)
+
+                    Spacer()
+
+                    Button("Skip") {
+                        onGetStarted()
+                    }
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(UniFindStyle.indigo)
+                }
+                .padding(.horizontal, 24)
+                .padding(.top, 12)
+
+                TabView(selection: $currentPage) {
+                    ForEach(OnboardingPage.all) { page in
+                        pageContent(page)
+                            .tag(page.id)
+                            .padding(.horizontal, 24)
+                    }
+                }
+                .tabViewStyle(.page(indexDisplayMode: .never))
+                .animation(.easeInOut(duration: 0.25), value: currentPage)
+
+                HStack(spacing: 8) {
+                    ForEach(OnboardingPage.all) { page in
+                        Capsule()
                             .fill(
-                                LinearGradient(
-                                    colors: [
-                                        Color.white.opacity(0.12),
-                                        Color.white.opacity(0.035)
-                                    ],
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
-                                )
+                                currentPage == page.id
+                                ? UniFindStyle.indigo
+                                : UniFindStyle.indigo.opacity(0.18)
                             )
-                            .overlay {
-                                RoundedRectangle(cornerRadius: 36)
-                                    .stroke(
-                                        Color.white.opacity(0.12),
-                                        lineWidth: 1
-                                    )
+                            .frame(
+                                width: currentPage == page.id ? 26 : 7,
+                                height: 7
+                            )
+                    }
+                }
+                .padding(.bottom, 24)
+
+                HStack(spacing: 12) {
+                    if currentPage > 0 {
+                        Button {
+                            withAnimation {
+                                currentPage -= 1
                             }
-
-                        Circle()
-                            .fill(limeColor.opacity(0.12))
-                            .frame(width: 190, height: 190)
-
-                        Circle()
-                            .stroke(
-                                Color.white.opacity(0.13),
-                                style: StrokeStyle(
-                                    lineWidth: 1,
-                                    dash: [5, 7]
-                                )
-                            )
-                            .frame(width: 235, height: 235)
-
-                        Image(systemName: "backpack.fill")
-                            .font(.system(size: 105, weight: .regular))
-                            .foregroundStyle(
-                                LinearGradient(
-                                    colors: [
-                                        .white,
-                                        Color(red: 0.72, green: 0.77, blue: 0.92)
-                                    ],
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
-                                )
-                            )
-                            .shadow(
-                                color: .black.opacity(0.25),
-                                radius: 20,
-                                x: 0,
-                                y: 15
-                            )
-
-                        // Floating location badge.
-                        floatingBadge(
-                            symbol: "location.fill",
-                            color: limeColor
-                        )
-                        .offset(x: 100, y: -85)
-
-                        // Floating lost-item badge.
-                        floatingBadge(
-                            symbol: "key.fill",
-                            color: Color(red: 1.0, green: 0.69, blue: 0.48)
-                        )
-                        .offset(x: -105, y: 65)
-
-                        // Match badge.
-                        HStack(spacing: 7) {
-                            Image(systemName: "checkmark.circle.fill")
-                                .foregroundStyle(limeColor)
-
-                            Text("Ready to reconnect")
-                                .font(.system(size: 11, weight: .semibold))
-                                .foregroundStyle(.white)
+                        } label: {
+                            Image(systemName: "arrow.left")
+                                .font(.system(size: 16, weight: .bold))
+                                .foregroundStyle(UniFindStyle.indigo)
+                                .frame(width: 58, height: 56)
+                                .background(Color.white.opacity(0.8))
+                                .clipShape(RoundedRectangle(cornerRadius: 17))
+                                .overlay {
+                                    RoundedRectangle(cornerRadius: 17)
+                                        .stroke(Color.white, lineWidth: 1)
+                                }
                         }
-                        .padding(.horizontal, 13)
-                        .padding(.vertical, 10)
-                        .background(backgroundColor.opacity(0.85))
-                        .clipShape(Capsule())
-                        .overlay {
-                            Capsule()
-                                .stroke(
-                                    Color.white.opacity(0.12),
-                                    lineWidth: 1
-                                )
+                        .buttonStyle(.plain)
+                    }
+
+                    Button {
+                        if currentPage < OnboardingPage.all.count - 1 {
+                            withAnimation {
+                                currentPage += 1
+                            }
+                        } else {
+                            onGetStarted()
                         }
-                        .offset(y: 125)
-                    }
-                    .frame(height: min(geometry.size.height * 0.34, 285))
-
-                    Spacer(minLength: 36)
-
-                    // Main message.
-                    VStack(alignment: .leading, spacing: 18) {
-                        Text("LOST SOMETHING?")
-                            .font(.system(size: 11, weight: .bold))
-                            .tracking(3)
-                            .foregroundStyle(limeColor)
-
-                        (
-                            Text("Find what matters.\n")
-                                .foregroundColor(.white)
-                            +
-                            Text("Bring it ")
-                                .foregroundColor(.white)
-                            +
-                            Text("back.")
-                                .foregroundColor(limeColor)
-                        )
-                        .font(.system(size: 38, weight: .bold))
-                        .tracking(-1.5)
-                        .fixedSize(horizontal: false, vertical: true)
-                        .minimumScaleFactor(0.75)
-
-                        Text(
-                            "Report lost items, discover possible matches, " +
-                            "and help belongings find their way home."
-                        )
-                        .font(.system(size: 15))
-                        .foregroundStyle(
-                            Color.white.opacity(0.67)
-                        )
-                        .lineSpacing(5)
-                        .fixedSize(
-                            horizontal: false,
-                            vertical: true
-                        )
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-
-                    Spacer(minLength: 28)
-
-                    // Feature highlights.
-                    HStack(spacing: 10) {
-                        featurePill(
-                            symbol: "magnifyingglass",
-                            title: "Discover"
-                        )
-
-                        featurePill(
-                            symbol: "camera.fill",
-                            title: "Report"
-                        )
-
-                        featurePill(
-                            symbol: "arrow.trianglehead.2.clockwise",
-                            title: "Reconnect"
-                        )
-                    }
-
-                    Spacer(minLength: 25)
-
-                    // Primary action.
-                    Button(action: onGetStarted) {
+                    } label: {
                         HStack {
                             Spacer()
-
-                            Text("Get Started")
-                                .font(.system(size: 16, weight: .bold))
-
+                            Text(currentPage == OnboardingPage.all.count - 1 ? "Get Started" : "Continue")
                             Spacer()
-
-                            Image(systemName: "arrow.right")
-                                .font(.system(size: 16, weight: .bold))
+                            Image(systemName: currentPage == OnboardingPage.all.count - 1 ? "checkmark" : "arrow.right")
                         }
-                        .foregroundStyle(backgroundColor)
-                        .padding(.horizontal, 22)
-                        .frame(height: 58)
-                        .background(limeColor)
-                        .clipShape(RoundedRectangle(cornerRadius: 18))
+                        .font(.system(size: 16, weight: .bold))
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 20)
+                        .frame(height: 56)
+                        .background(
+                            LinearGradient(
+                                colors: [UniFindStyle.indigo, UniFindStyle.teal],
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            )
+                        )
+                        .clipShape(RoundedRectangle(cornerRadius: 17))
+                        .shadow(color: UniFindStyle.indigo.opacity(0.18), radius: 12, y: 6)
                     }
                     .buttonStyle(.plain)
-
-                    Text("YOUR CAMPUS. YOUR COMMUNITY.")
-                        .font(.system(size: 9, weight: .semibold))
-                        .tracking(2)
-                        .foregroundStyle(.white.opacity(0.42))
-                        .frame(maxWidth: .infinity)
-                        .padding(.top, 18)
-                        .padding(.bottom, 12)
                 }
-                .padding(.horizontal, 26)
+                .padding(.horizontal, 24)
+
+                Text("YOUR CAMPUS. YOUR COMMUNITY.")
+                    .font(.system(size: 9, weight: .bold))
+                    .tracking(2)
+                    .foregroundStyle(UniFindStyle.muted)
+                    .padding(.top, 20)
+                    .padding(.bottom, 12)
             }
         }
-        .preferredColorScheme(.dark)
+        .preferredColorScheme(.light)
     }
 
-    // MARK: - Floating badges
+    private func pageContent(_ page: OnboardingPage) -> some View {
+        VStack(spacing: 0) {
+            Spacer(minLength: 16)
 
-    private func floatingBadge(
-        symbol: String,
-        color: Color
-    ) -> some View {
-        ZStack {
-            RoundedRectangle(cornerRadius: 17)
-                .fill(backgroundColor)
-                .frame(width: 52, height: 52)
+            ZStack {
+                RoundedRectangle(cornerRadius: 34)
+                    .fill(.ultraThinMaterial)
+                    .overlay {
+                        RoundedRectangle(cornerRadius: 34)
+                            .stroke(Color.white.opacity(0.9), lineWidth: 1)
+                    }
 
-            RoundedRectangle(cornerRadius: 17)
-                .stroke(Color.white.opacity(0.15), lineWidth: 1)
-                .frame(width: 52, height: 52)
+                Circle()
+                    .fill(page.tint.opacity(0.12))
+                    .frame(width: 190, height: 190)
 
-            Image(systemName: symbol)
-                .font(.system(size: 20, weight: .semibold))
-                .foregroundStyle(color)
-        }
-        .shadow(color: .black.opacity(0.25), radius: 12, y: 6)
-    }
+                Circle()
+                    .stroke(page.tint.opacity(0.18), lineWidth: 1)
+                    .frame(width: 225, height: 225)
 
-    // MARK: - Feature pills
+                Image(systemName: page.symbol)
+                    .font(.system(size: 82, weight: .medium))
+                    .foregroundStyle(
+                        LinearGradient(
+                            colors: [page.tint, UniFindStyle.teal],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
 
-    private func featurePill(
-        symbol: String,
-        title: String
-    ) -> some View {
-        HStack(spacing: 7) {
-            Image(systemName: symbol)
-                .font(.system(size: 12, weight: .semibold))
-                .foregroundStyle(limeColor)
+                Image(systemName: "checkmark.circle.fill")
+                    .font(.system(size: 31))
+                    .foregroundStyle(UniFindStyle.teal)
+                    .background(Circle().fill(.white))
+                    .offset(x: 91, y: -81)
+            }
+            .frame(height: 255)
+            .uniGlassCard(cornerRadius: 34)
 
-            Text(title)
-                .font(.system(size: 11, weight: .semibold))
-                .foregroundStyle(.white.opacity(0.9))
-                .lineLimit(1)
-                .minimumScaleFactor(0.8)
-        }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, 13)
-        .background(.white.opacity(0.065))
-        .clipShape(RoundedRectangle(cornerRadius: 13))
-        .overlay {
-            RoundedRectangle(cornerRadius: 13)
-                .stroke(
-                    Color.white.opacity(0.08),
-                    lineWidth: 1
-                )
+            Spacer(minLength: 32)
+
+            VStack(alignment: .leading, spacing: 16) {
+                Text(page.eyebrow)
+                    .font(.system(size: 10, weight: .bold))
+                    .tracking(2.2)
+                    .foregroundStyle(page.tint)
+
+                VStack(alignment: .leading, spacing: 1) {
+                    Text(page.title)
+                        .foregroundStyle(UniFindStyle.ink)
+
+                    Text(page.highlight)
+                        .foregroundStyle(page.tint)
+                }
+                .font(.system(size: 37, weight: .bold, design: .rounded))
+                .tracking(-1.1)
+                .minimumScaleFactor(0.75)
+                .fixedSize(horizontal: false, vertical: true)
+
+                Text(page.description)
+                    .font(.system(size: 15))
+                    .foregroundStyle(UniFindStyle.muted)
+                    .lineSpacing(5)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+
+            Spacer(minLength: 28)
         }
     }
 }
@@ -321,4 +244,3 @@ struct OnboardingView: View {
 #Preview {
     OnboardingView(onGetStarted: {})
 }
-

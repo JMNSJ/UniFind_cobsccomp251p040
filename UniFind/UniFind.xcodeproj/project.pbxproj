@@ -24,6 +24,13 @@
 			remoteGlobalIDString = C221193F30907AF800AB93A4;
 			remoteInfo = UniFindWidgetExtensionExtension;
 		};
+		C221196D309091C700AB93A4 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = C28377213084830500E5375C /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = C28377283084830500E5375C;
+			remoteInfo = UniFind;
+		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -44,6 +51,7 @@
 		C221194030907AF800AB93A4 /* UniFindWidgetExtensionExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = UniFindWidgetExtensionExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		C221194130907AF800AB93A4 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
 		C221194330907AF800AB93A4 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
+		C2211969309091C700AB93A4 /* UniFindTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = UniFindTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		C229D8FE308C6F6F0015AC9D /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		C28377293084830500E5375C /* UniFind.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = UniFind.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -70,6 +78,20 @@
 			);
 			target = C221193F30907AF800AB93A4 /* UniFindWidgetExtensionExtension */;
 		};
+		C2211976309092B600AB93A4 /* Exceptions for "UniFindTests" folder in "UniFind" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				ReportValidator.swift,
+			);
+			target = C28377283084830500E5375C /* UniFind */;
+		};
+		C2211977309092B600AB93A4 /* Exceptions for "UniFindTests" folder in "UniFindTests" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				ReportValidator.swift,
+			);
+			target = C2211968309091C700AB93A4 /* UniFindTests */;
+		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -79,6 +101,15 @@
 				C221195630907AFA00AB93A4 /* Exceptions for "UniFindWidgetExtension" folder in "UniFindWidgetExtensionExtension" target */,
 			);
 			path = UniFindWidgetExtension;
+			sourceTree = "<group>";
+		};
+		C221196A309091C700AB93A4 /* UniFindTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				C2211976309092B600AB93A4 /* Exceptions for "UniFindTests" folder in "UniFind" target */,
+				C2211977309092B600AB93A4 /* Exceptions for "UniFindTests" folder in "UniFindTests" target */,
+			);
+			path = UniFindTests;
 			sourceTree = "<group>";
 		};
 		C283772B3084830500E5375C /* UniFind */ = {
@@ -99,6 +130,13 @@
 			files = (
 				C221194430907AF800AB93A4 /* SwiftUI.framework in Frameworks */,
 				C221194230907AF800AB93A4 /* WidgetKit.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C2211966309091C700AB93A4 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -130,6 +168,7 @@
 				C229D8FE308C6F6F0015AC9D /* GoogleService-Info.plist */,
 				C283772B3084830500E5375C /* UniFind */,
 				C221194530907AF800AB93A4 /* UniFindWidgetExtension */,
+				C221196A309091C700AB93A4 /* UniFindTests */,
 				C229D91A308C86E70015AC9D /* Frameworks */,
 				C283772A3084830500E5375C /* Products */,
 			);
@@ -140,6 +179,7 @@
 			children = (
 				C28377293084830500E5375C /* UniFind.app */,
 				C221194030907AF800AB93A4 /* UniFindWidgetExtensionExtension.appex */,
+				C2211969309091C700AB93A4 /* UniFindTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -168,6 +208,29 @@
 			productName = UniFindWidgetExtensionExtension;
 			productReference = C221194030907AF800AB93A4 /* UniFindWidgetExtensionExtension.appex */;
 			productType = "com.apple.product-type.app-extension";
+		};
+		C2211968309091C700AB93A4 /* UniFindTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = C221196F309091C700AB93A4 /* Build configuration list for PBXNativeTarget "UniFindTests" */;
+			buildPhases = (
+				C2211965309091C700AB93A4 /* Sources */,
+				C2211966309091C700AB93A4 /* Frameworks */,
+				C2211967309091C700AB93A4 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				C221196E309091C700AB93A4 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				C221196A309091C700AB93A4 /* UniFindTests */,
+			);
+			name = UniFindTests;
+			packageProductDependencies = (
+			);
+			productName = UniFindTests;
+			productReference = C2211969309091C700AB93A4 /* UniFindTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
 		};
 		C28377283084830500E5375C /* UniFind */ = {
 			isa = PBXNativeTarget;
@@ -209,6 +272,10 @@
 					C221193F30907AF800AB93A4 = {
 						CreatedOnToolsVersion = 26.2;
 					};
+					C2211968309091C700AB93A4 = {
+						CreatedOnToolsVersion = 26.2;
+						TestTargetID = C28377283084830500E5375C;
+					};
 					C28377283084830500E5375C = {
 						CreatedOnToolsVersion = 26.2;
 						LastSwiftMigration = 2620;
@@ -234,12 +301,20 @@
 			targets = (
 				C28377283084830500E5375C /* UniFind */,
 				C221193F30907AF800AB93A4 /* UniFindWidgetExtensionExtension */,
+				C2211968309091C700AB93A4 /* UniFindTests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
 		C221193E30907AF800AB93A4 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C2211967309091C700AB93A4 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -264,6 +339,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		C2211965309091C700AB93A4 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		C28377253084830500E5375C /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -278,6 +360,11 @@
 			isa = PBXTargetDependency;
 			target = C221193F30907AF800AB93A4 /* UniFindWidgetExtensionExtension */;
 			targetProxy = C221195330907AFA00AB93A4 /* PBXContainerItemProxy */;
+		};
+		C221196E309091C700AB93A4 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = C28377283084830500E5375C /* UniFind */;
+			targetProxy = C221196D309091C700AB93A4 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -339,6 +426,48 @@
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		C2211970309091C700AB93A4 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "cobsccomp251p-040.UniFind.UniFindTests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/UniFind.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/UniFind";
+			};
+			name = Debug;
+		};
+		C2211971309091C700AB93A4 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "cobsccomp251p-040.UniFind.UniFindTests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/UniFind.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/UniFind";
 			};
 			name = Release;
 		};
@@ -536,6 +665,15 @@
 			buildConfigurations = (
 				C221195830907AFA00AB93A4 /* Debug */,
 				C221195930907AFA00AB93A4 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		C221196F309091C700AB93A4 /* Build configuration list for PBXNativeTarget "UniFindTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C2211970309091C700AB93A4 /* Debug */,
+				C2211971309091C700AB93A4 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

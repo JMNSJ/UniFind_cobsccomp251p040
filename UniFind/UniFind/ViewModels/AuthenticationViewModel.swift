@@ -5,7 +5,6 @@ import FirebaseAuth
 
 @MainActor
 final class AuthenticationViewModel: ObservableObject {
-
     @Published var email = ""
     @Published var password = ""
     @Published var isLoading = false
@@ -17,13 +16,15 @@ final class AuthenticationViewModel: ObservableObject {
     private let authService = AuthenticationService.shared
 
     init() {
-        if let user = authService.currentUser {
-            userID = user.uid
-            userEmail = user.email
-            isLoggedIn = true
-
-            ReportStore.shared.startListening(for: user.uid)
+        // Require sign-in again when the app is relaunched.
+        if authService.currentUser != nil {
+            try? authService.signOut()
         }
+
+        ReportStore.shared.stopListening()
+        isLoggedIn = false
+        userID = nil
+        userEmail = nil
     }
 
     func login() {
@@ -51,7 +52,6 @@ final class AuthenticationViewModel: ObservableObject {
             email: trimmedEmail,
             password: password
         ) { [weak self] result in
-
             Task { @MainActor in
                 guard let self else { return }
 
@@ -68,8 +68,7 @@ final class AuthenticationViewModel: ObservableObject {
                     ReportStore.shared.startListening(for: user.uid)
 
                 case .failure(let error):
-                    self.errorMessage =
-                        self.friendlyErrorMessage(error)
+                    self.errorMessage = self.friendlyErrorMessage(error)
                 }
             }
         }
@@ -78,7 +77,6 @@ final class AuthenticationViewModel: ObservableObject {
     func logout() {
         do {
             try authService.signOut()
-
             ReportStore.shared.stopListening()
 
             userID = nil
@@ -87,7 +85,6 @@ final class AuthenticationViewModel: ObservableObject {
             password = ""
             errorMessage = nil
             isLoggedIn = false
-
         } catch {
             errorMessage = "Unable to log out. Please try again."
         }
@@ -118,4 +115,3 @@ final class AuthenticationViewModel: ObservableObject {
         }
     }
 }
-
